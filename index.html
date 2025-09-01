@@ -1,1 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cicada 3301² – The Entrepreneur's Gauntlet</title>
+  <meta name="theme-color" content="#0a0a0f" />
+  <style>
+    :root {
+      --bg:#0a0a0f; --panel:#0e0f16; --muted:#9ca3af; --fg:#e5e7eb;
+      --accent:#ff4500; --accent-2:#ff6347;
+      --shadow:0 10px 30px rgba(0,0,0,.5);
+    }
 
+    html,body { height:100%; margin:0; }
+    * { box-sizing:border-box; }
+
+    body {
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background:radial-gradient(1200px 800px at 70% -10%,rgba(255,69,0,.08),transparent 60%),
+      radial-gradient(1000px 600px at -10% 120%,rgba(255,99,71,.07),transparent 60%),var(--bg);
+      color:var(--fg);
+      font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+      letter-spacing:.2px;
+      line-height:1.5;
+    }
+
+    .wrap {
+      width:100%;
+      max-width:1100px;
+      background:var(--panel);
+      border-radius:20px;
+      box-shadow:var(--shadow);
+      padding:24px;
+    }
+
+    header {
+      display:flex;
+      gap:16px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:16px;
+    }
+
+    .title { display:flex; gap:12px; align-items:center; }
+    .logo {
+      width:42px; height:42px; border-radius:10px;
+      border:1px solid #371f29; display:grid; place-items:center;
+      background:linear-gradient(135deg, rgba(255,69,0,.1),transparent);
+      box-shadow:var(--shadow);
+    }
+    .logo::after { content:"🔥"; font-size:20px; color:var(--accent); }
+
+    h1 {
+      font-size:clamp(20px, 2vw, 26px);
+      margin:0; font-weight:700; letter-spacing:.5px;
+    }
+
+    .hud { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .chip {
+      display:inline-flex; align-items:center; gap:8px;
+      border:1px solid #371f29;
+      background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.00));
+      padding:8px 12px; border-radius:12px;
+      box-shadow:var(--shadow); font-size:14px;
+    }
+
+    .btn {
+      cursor:pointer; border:none; border-radius:12px;
+      padding:10px 14px; font-weight:600; letter-spacing:.3px;
+      background:linear-gradient(135deg,var(--accent-2),#ff4500);
+      color:#180808;
+      box-shadow:0 6px 20px rgba(255,69,0,.3);
+      transition:transform .2s ease, box-shadow .2s ease;
+    }
+    .btn:hover { transform:translateY(-1px); box-shadow:0 8px 24px rgba(255,69,0,.5); }
+
+    .game { display:grid; gap:12px; }
+    .card {
+      border:1px solid #371f29; border-radius:16px;
+      background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.015));
+      box-shadow:var(--shadow);
+    }
+    .canvas-wrap { padding:16px; }
+    canvas {
+      display:block; margin:auto;
+      border-radius:14px;
+      background:#0b0f14;
+      image-rendering:pixelated;
+    }
+
+    .controls {
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+      padding:16px;
+    }
+
+    .kbd {
+      border:1px solid #513737;
+      border-radius:10px;
+      padding:6px 10px;
+      font-weight:700;
+      background:#160b0b;
+    }
+
+    .quote {
+      text-align:center;
+      font-size:14px;
+      opacity:.75;
+      margin-top:8px;
+      font-style:italic;
+      max-width:300px;
+    }
+
+    .dpad {
+      display:grid;
+      grid-template-columns:repeat(3,52px);
+      gap:8px;
+      place-content:center;
+      margin:6px auto 16px;
+    }
+    .dpad button {
+      width:52px; height:52px; border-radius:12px;
+      border:1px solid #553333; background:#1a0e0e;
+      color:var(--fg); font-weight:900;
+    }
+
+    footer { opacity:.7; text-align:center; margin-top:10px; font-size:12px; }
+
+    /* Block small screens */
+    #mobileBlock {
+      position:fixed; inset:0;
+      display:none; align-items:center; justify-content:center;
+      background:#0a0a0f;
+      color:var(--fg);
+      font-size:1.2rem;
+      text-align:center;
+      padding:20px;
+    }
+    @media (max-width: 900px) {
+      .wrap { display:none; }
+      #mobileBlock { display:flex; }
+    }
+  </style>
+</head>
+<body>
+<div id="mobileBlock">
+  🚫 This challenge is only available on larger screens.<br>
+  Please switch to a laptop or desktop for the best experience.
+</div>
+
+<div class="wrap">
+  <header>
+    <div class="title">
+      <div class="logo"></div>
+      <h1>Cicada 3301 Level 3!</h1>
+    </div>
+    <div class="hud">
+      <div class="chip">⏱️ Time: <span id="time">00:00</span></div>
+      <div class="chip">🧭 Moves: <span id="moves">0</span></div>
+      <button class="btn" id="resetBtn">New Gauntlet</button>
+    </div>
+  </header>
+
+  <section class="game">
+    <div class="card canvas-wrap">
+      <canvas id="maze" width="720" height="540"></canvas>
+    </div>
+    <div class="card controls">
+      <div>
+        <strong>How to Play:</strong>
+        <div>Use <span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span> or Arrow keys to reach the glowing exit.</div>
+        <p class="quote">"In the unforgiving maze of entrepreneurship, there is no map. Only vision, grit, and the will to push through."</p>
+      </div>
+      <div class="dpad" id="dpad">
+        <span></span><button data-dy="-1">▲</button><span></span>
+        <button data-dx="-1">◀</button><button data-dy="1">▼</button><button data-dx="1">▶</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>Made for Cicada 3301² · Level 3. The true test of an entrepreneur.</footer>
+</div>
+
+<script>
+  const CLUE_PLAIN = "level4.edckprcas.co.in";
+  const USE_ROT13_AFTER_B64 = false;
+  const MAZE_SIZE = 41;
+
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('keydown', e => {
+    const k = e.key.toLowerCase();
+    if (k === 'f12' || (e.ctrlKey && e.shiftKey && ['i','j','c','u'].includes(k))) e.preventDefault();
+  });
+
+  const $ = sel => document.querySelector(sel);
+  const timeEl = $('#time'), movesEl = $('#moves');
+  const canvas = $('#maze');
+  const ctx = canvas.getContext('2d');
+
+  const state = { cols:MAZE_SIZE, rows:MAZE_SIZE, cell:24, wall:3, grid:[], player:{c:0,r:0}, exit:{c:0,r:0}, moves:0, startTime:0, timer:null };
+  const rand = n => Math.floor(Math.random()*n);
+
+  function startTimer(){
+    state.startTime = performance.now();
+    clearInterval(state.timer);
+    state.timer = setInterval(()=>{
+      const ms = performance.now() - state.startTime;
+      const s = Math.floor(ms/1000), m = Math.floor(s/60);
+      timeEl.textContent = `${String(m).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+    }, 200);
+  }
+
+  function encodeClue(){
+    const b64 = btoa(CLUE_PLAIN);
+    return USE_ROT13_AFTER_B64 ? b64.replace(/[a-zA-Z]/g,c=>String.fromCharCode((c<='Z'?65:97)+((c.charCodeAt(0)-(c<='Z'?65:97)+13)%26))) : b64;
+  }
+
+  function generate(cols, rows){
+    state.cols = cols; state.rows = rows; state.moves = 0; movesEl.textContent = '0';
+    state.cell = Math.floor(Math.min((canvas.width-40)/cols, (canvas.height-40)/rows));
+    state.wall = Math.max(2, Math.floor(state.cell*0.14));
+    state.grid = [];
+
+    for(let r=0;r<rows;r++){
+      const row=[]; for(let c=0;c<cols;c++) row.push({c,r, walls:[1,1,1,1], v:false});
+      state.grid.push(row);
+    }
+
+    const stack=[]; let current = state.grid[0][0]; current.v=true; stack.push(current);
+    while(stack.length){
+      const nbs = neighbors(current).filter(n=>!n.v);
+      if(nbs.length){
+        const next = nbs[rand(nbs.length)];
+        removeWall(current, next); next.v=true; stack.push(current); current=next;
+      } else current = stack.pop();
+    }
+
+    state.player = {c:0,r:0}; state.exit = {c:cols-1, r:rows-1};
+    startTimer(); draw();
+  }
+
+  function neighbors(cell){
+    const dirs=[ [0,-1,0], [1,0,1], [0,1,2], [-1,0,3] ];
+    const res=[]; for(const [dx,dy] of dirs){
+      const nx=cell.c+dx, ny=cell.r+dy;
+      if(nx>=0 && nx<state.cols && ny>=0 && ny<state.rows) res.push(state.grid[ny][nx]);
+    }
+    return res;
+  }
+
+  function removeWall(a,b){
+    const dx=b.c-a.c, dy=b.r-a.r;
+    if(dx===1){ a.walls[1]=0; b.walls[3]=0; }
+    else if(dx===-1){ a.walls[3]=0; b.walls[1]=0; }
+    else if(dy===1){ a.walls[2]=0; b.walls[0]=0; }
+    else if(dy===-1){ a.walls[0]=0; b.walls[2]=0; }
+  }
+
+  function draw(){
+    const pad=20; const cs=state.cell; const w=state.wall;
+    const offX=pad, offY=pad;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#0a0f15';
+    ctx.fillRect(offX-8, offY-8, state.cols*cs+16, state.rows*cs+16);
+
+    for(let r=0;r<state.rows;r++){
+      for(let c=0;c<state.cols;c++){
+        const cell = state.grid[r][c];
+        const x = offX + c*cs, y = offY + r*cs;
+        ctx.fillStyle = '#200f17';
+        if(cell.walls[0]) ctx.fillRect(x, y, cs, w);
+        if(cell.walls[1]) ctx.fillRect(x+cs-w, y, w, cs);
+        if(cell.walls[2]) ctx.fillRect(x, y+cs-w, cs, w);
+        if(cell.walls[3]) ctx.fillRect(x, y, w, cs);
+        if(c===state.exit.c && r===state.exit.r){
+          const grad = ctx.createRadialGradient(x+cs/2,y+cs/2,2,x+cs/2,y+cs/2,cs/1.2);
+          grad.addColorStop(0,'rgba(255,69,0,.35)');
+          grad.addColorStop(1,'rgba(255,69,0,0)');
+          ctx.fillStyle = grad; ctx.fillRect(x, y, cs, cs);
+        }
+      }
+    }
+
+    const px = offX + state.player.c*cs + cs/2;
+    const py = offY + state.player.r*cs + cs/2;
+    ctx.beginPath();
+    ctx.arc(px, py, Math.max(4, cs*0.28), 0, Math.PI*2);
+    ctx.fillStyle = '#ff6347'; ctx.fill();
+  }
+
+  function move(dx,dy){
+    const {c,r} = state.player; const cell = state.grid[r][c];
+    const dirIndex = dx===0 && dy===-1 ? 0 : dx===1 ? 1 : dy===1 ? 2 : 3;
+    if(cell.walls[dirIndex]) return;
+    const nc = c+dx, nr = r+dy;
+    if(nc<0||nr<0||nc>=state.cols||nr>=state.rows) return;
+    state.player.c = nc; state.player.r = nr;
+    state.moves++; movesEl.textContent = state.moves;
+    draw();
+
+    if(nc===state.exit.c && nr===state.exit.r){
+      clearInterval(state.timer);
+      alert("Gauntlet Conquered ✅\nClue: "+encodeClue());
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    const k = e.key.toLowerCase();
+    if(['w','arrowup'].includes(k)) { e.preventDefault(); move(0,-1); }
+    else if(['s','arrowdown'].includes(k)) { e.preventDefault(); move(0,1); }
+    else if(['a','arrowleft'].includes(k)) { e.preventDefault(); move(-1,0); }
+    else if(['d','arrowright'].includes(k)) { e.preventDefault(); move(1,0); }
+  });
+
+  $('#dpad').addEventListener('click', e => {
+    const btn = e.target.closest('button'); if(!btn) return;
+    move(parseInt(btn.dataset.dx||'0'), parseInt(btn.dataset.dy||'0'));
+  });
+
+  $('#resetBtn').addEventListener('click', () => generate(MAZE_SIZE, MAZE_SIZE));
+  generate(MAZE_SIZE, MAZE_SIZE);
+</script>
+</body>
+</html>
